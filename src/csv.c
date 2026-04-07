@@ -1,5 +1,4 @@
 #include "../includes/csv.h"
-#include <stddef.h>
 
 // TODO: ADD OTHER SUPPORT FOR OTHER TYPES 
 
@@ -22,8 +21,7 @@
     int csv_parse(CSV *csv, u8 *mem);
 // ****************************************************************************
  
-CSV *load_csv(void *address, size_t size){
-    FILE csv_f = (FILE){.f_ptr=address, .size = size, .offset = 0};
+CSV *load_csv(FILE * file){
 
     CSV * csv = create_csv();
 

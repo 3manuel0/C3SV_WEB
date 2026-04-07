@@ -16,7 +16,7 @@ typedef struct {
 
 CSV *create_csv(); // creates an empty csv struct in memory
 
-CSV *load_csv(void *address, size_t size);// load with types (only int and float 64bit)
+CSV *load_csv(FILE * file);// load with types (only int and float 64bit)
 
 void csv_free(CSV *csv); // free csv in memory
 

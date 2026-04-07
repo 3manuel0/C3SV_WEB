@@ -36,13 +36,56 @@
       overflow-y: auto;
       white-space: pre-wrap;
     }
+    /* wrapper */
+    .file-input {
+      display: inline-block;
+      position: relative;
+      cursor: pointer;
+    }
+
+    /* hide default input */
+    .file-input input[type="file"] {
+      display: none;
+    }
+
+    /* custom button */
+    .file-input span {
+      display: inline-block;
+      padding: 10px 18px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e5e7eb;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    /* hover */
+    .file-input span:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    /* active */
+    .file-input span:active {
+      transform: scale(0.98);
+    }
+
+    /* focus (keyboard accessible) */
+    .file-input input:focus + span {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
   </style>
   <body>
     <div id="console">
       <label for="terminal">_terminal_</label>
       <pre id="terminal"></pre>
     </div>
-    <input type="file" name="csv" id="csv" />
+    <label class="file-input">
+      <input type="file" name="csv" id="csv" />
+      <span>Choose CSV file</span>
+    </label>
   </body>
   <script src="https://cdn.jsdelivr.net/gh/3manuel0/gamelib@latest/wasmlib.js
   "></script>

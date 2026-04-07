@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>wasm</title>
+  </head>
+  <style>
+    body {
+      background-color: #121212;
+      max-height: 100vh;
+    }
+    #console {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      height: 60%;
+    }
+    label {
+      color: #fff;
+      font-family: monospace;
+      font-size: 1.2rem;
+    }
+    #terminal {
+      background: black;
+      color: #cdd6f4;
+      font-family: monospace, Courier;
+      padding: 1rem 2rem;
+      height: fit-content;
+      width: 90%;
+      margin: 0;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+  </style>
+  <body>
+    <div id="console">
+      <label for="terminal">_terminal_</label>
+      <pre id="terminal"></pre>
+    </div>
+    <input type="file" name="csv" id="csv" />
+  </body>
+  <script src="https://cdn.jsdelivr.net/gh/3manuel0/gamelib@latest/wasmlib.js
+  "></script>
+  <script src="script.js"></script>
+</html>

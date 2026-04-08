@@ -72,7 +72,7 @@ fileInput.onchange = async () => {
 };
 
 worker.onmessage = (e) => {
-  const { type, error, result, term, head } = e.data;
+  const { type, error, result, term, head, body } = e.data;
 
   switch (type) {
     case "stdout":
@@ -80,8 +80,7 @@ worker.onmessage = (e) => {
       terminal.textContent += term;
       // scrolling
       terminal.scrollTop = terminal.scrollHeight;
-      renderTable(head, []);
-
+      if (head) renderTable(head, body);
       break;
 
     case "ready":

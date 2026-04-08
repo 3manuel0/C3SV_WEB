@@ -5,6 +5,13 @@ const csv_type = Object.freeze({
   boolean_: 4,
 });
 
+const get_types = Object.freeze({
+  1: "string",
+  2: "float64",
+  3: "int64",
+  4: "boolean",
+});
+
 let wasm = null;
 let is_ready = false;
 let terminal = "";
@@ -206,10 +213,14 @@ self.onmessage = async (e) => {
       console.log(typesptr);
       for (let i = 0; i < numcols; i++) {
         console.log(
-          new DataView(wasm.instance.exports.memory.buffer).getUint32(
-            typesptr + i * 4,
-            true,
-          ),
+          get_types[
+            new Uint32Array(
+              wasm.instance.exports.memory.buffer,
+              typesptr + i * 4,
+              1,
+            )[0]
+          ],
+          typesptr,
         );
       }
       console.log("number of columns", numcols, numrows);

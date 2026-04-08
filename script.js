@@ -1,5 +1,54 @@
 const terminal = document.getElementById("terminal");
 
+function generateEmpty(rows = 30, cols = 8) {
+  const headers = [];
+  for (let c = 0; c < cols; c++) {
+    headers.push(" ");
+  }
+
+  const data = [];
+  for (let r = 0; r < rows; r++) {
+    const row = [];
+    for (let c = 0; c < cols; c++) {
+      row.push(" ");
+    }
+    data.push(row);
+  }
+
+  return { headers, data };
+}
+
+function renderTable(headers, data) {
+  const thead = document.querySelector("#csvTable thead");
+  const tbody = document.querySelector("#csvTable tbody");
+
+  thead.innerHTML = "";
+  tbody.innerHTML = "";
+
+  // Headers
+  const headerRow = document.createElement("tr");
+  headers.forEach((h) => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  // Rows
+  data.forEach((row) => {
+    const tr = document.createElement("tr");
+    row.forEach((cell) => {
+      const td = document.createElement("td");
+      td.textContent = cell;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+const empty = generateEmpty(50, 10);
+renderTable(empty.headers, empty.data);
+
 const worker = new Worker("worker.js");
 
 worker.postMessage({
@@ -23,7 +72,7 @@ fileInput.onchange = async () => {
 };
 
 worker.onmessage = (e) => {
-  const { type, error, result, term } = e.data;
+  const { type, error, result, term, head } = e.data;
 
   switch (type) {
     case "stdout":

@@ -39,6 +39,15 @@ const get_str_len = (str_ptr, len) => {
   return new TextDecoder().decode(str_bytes);
 };
 
+const get_string_view = (sv_ptr) => {
+  const buffer = wasm.instance.exports.memory.buffer;
+  const str_ptr = new Uint32Array(buffer, sv_ptr, 1)[0];
+  const len = new Uint32Array(buffer, sv_ptr + 4, 1)[0];
+  let string = get_str_len(str_ptr, len);
+  console.log(string, len, str_ptr);
+  return string;
+};
+
 const initPromise = WebAssembly.instantiateStreaming(fetch("build/main.wasm"), {
   env: make_environment({
     jsprintf: (str_ptr, args_ptrs) => {
@@ -49,8 +58,8 @@ const initPromise = WebAssembly.instantiateStreaming(fetch("build/main.wasm"), {
         if (str[i] === "%") {
           switch (str[i + 1]) {
             case "f":
-              f_str += new Float32Array(buffer, args_ptrs, 1)[0];
-              args_ptrs += 4;
+              f_str += new Float64Array(buffer, args_ptrs, 1)[0];
+              args_ptrs += 8;
               i += 2;
               break;
             case "c":
@@ -70,6 +79,13 @@ const initPromise = WebAssembly.instantiateStreaming(fetch("build/main.wasm"), {
               f_str += uint;
               args_ptrs += 4;
               i += 2;
+              break;
+            // fix this, it causes errors
+            case "g":
+              f_str += new Float64Array(buffer, args_ptrs, 1)[0].toPrecision(6);
+              args_ptrs += 8;
+              i += 2;
+              console.log(str, f_str);
               break;
             case "s":
               const str_ptr = new Uint32Array(buffer, args_ptrs, 1)[0];
@@ -131,7 +147,7 @@ self.onmessage = async (e) => {
 
   await initPromise;
 
-  const { heap_base, test, malloc } = wasm.instance.exports;
+  const { heap_base, test, malloc, size_of_sv } = wasm.instance.exports;
 
   switch (type) {
     case "init":
@@ -153,10 +169,16 @@ self.onmessage = async (e) => {
         len,
       );
       wasmMemory.set(bytes);
-      test(ptr, len);
+      console.log(
+        test(ptr, len),
+        get_string_view(test(ptr, len)),
+        size_of_sv(),
+      );
       console.log(ptr, buffer, len, terminal);
       let term = terminal;
-      self.postMessage({ type: "stdout", term });
+      let head = [];
+      self.postMessage({ type: "stdout", term, head });
+      console.log(wasm.instance.exports.memory.buffer);
     }
   }
 };

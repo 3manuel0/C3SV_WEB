@@ -21,48 +21,54 @@
     int csv_parse(CSV *csv, u8 *mem);
 // ****************************************************************************
  
-CSV *load_csv(FILE * file){
+CSV *load_csv(FILE *csv_f){
+
+    if(csv_f == NULL){
+        fprintf(stderr, "Error, Can't open file or wrong path!");
+        return NULL;
+    }
 
     CSV * csv = create_csv();
 
     if(csv == NULL){
-        jsprintf( "Error, csv Object Allocation Failed!\n");
+        fprintf(stderr, "Error, csv Object Allocation Failed!");
         return NULL;
     }
 
-    // fseek(csv_f, 0, SEEK_END);
+    fseek(csv_f, 0, SEEK_END);
 
-    // size_t temp_file_size = ftell(csv_f);
-    // u8 * csv_mem = calloc(temp_file_size + KiB(2), sizeof(u8));
+    size_t temp_file_size = ftell(csv_f);
+    jsprintf("ftell = %d \n", temp_file_size);
+    u8 * csv_mem = malloc(temp_file_size + KiB(1));
 
-    // if(csv_mem == NULL){
-    //     jsprintf( "Error, Memory Allocation Failed");
-    //     return NULL;
-    // }
+    if(csv_mem == NULL){
+        fprintf(stderr, "Error, Memory Allocation Failed");
+        return NULL;
+    }
 
-    // jsprintf("size + 2kib=%zu size=%zu\n", ftell(csv_f) + KiB(2), ftell(csv_f));
+    jsprintf("size + 1kib=%d size=%d\n", ftell(csv_f) + KiB(1), ftell(csv_f));
 
-    // rewind(csv_f);
-    // // columns left -> right
-    // // rows top -> bottom
-    // csv_to_memory(csv_mem, csv_f, temp_file_size, &csv->numcols, &csv->numrows);
-    // if(csv->numcols == 0 || csv->numrows == 0){
-    //     perror("Error, csv Parcing Failed!");
-    //     return NULL;
-    // }
+    fseek(csv_f, 0, SEEK_SET);
+    // columns left -> right
+    // rows top -> bottom
+    csv_to_memory(csv_mem, csv_f, temp_file_size, &csv->numcols, &csv->numrows);
+    if(csv->numcols == 0 || csv->numrows == 0){
+        jsprintf("Error, csv Parcing Failed!\n");
+        return NULL;
+    }
     
-    // if(csv_parse_head(csv, csv_mem)){
-    //     return  NULL;
-    // }
+    if(csv_parse_head(csv, csv_mem)){
+        return  NULL;
+    }
 
     
     // csv_print_head(csv);
     // for(size_t i = 0; i < temp_file_size; i++){
-        //    jsprintf("%c", csv_mem[i]);
+        //     printf("%c", csv_mem[i]);
         // }
-    //jsprintf("%zu\n", csv->numrow);
-    // csv_parse(csv, csv_mem);
-    //jsprintf("string: ");
+    // printf("%zu\n", csv->numrow);
+    csv_parse(csv, csv_mem);
+    // printf("string: ");
     csv_parse_with_types(csv);
     // sv_print((string_view *)csv->data[0]);
     return csv;

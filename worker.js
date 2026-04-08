@@ -1,7 +1,15 @@
+const csv_type = Object.freeze({
+  string_: 1,
+  float64_: 2,
+  int64_: 3,
+  boolean_: 4,
+});
+
 let wasm = null;
-let exports = null;
 let is_ready = false;
 let terminal = "";
+let head = [];
+let body = [];
 const make_environment = (env) => {
   return new Proxy(env, {
     get(target, prop, receiver) {
@@ -46,6 +54,18 @@ const get_string_view = (sv_ptr) => {
   let string = get_str_len(str_ptr, len);
   console.log(string, len, str_ptr);
   return string;
+};
+
+const get_headptr = (csv_ptr) => {
+  const buffer = wasm.instance.exports.memory.buffer;
+  const head_ptr = new Uint32Array(buffer, csv_ptr, 1)[0];
+  return head_ptr;
+};
+
+const get_typesptr = (csv_ptr) => {
+  const buffer = wasm.instance.exports.memory.buffer;
+  const types_ptr = new Uint32Array(buffer, csv_ptr + 4, 1)[0];
+  return types_ptr;
 };
 
 const initPromise = WebAssembly.instantiateStreaming(fetch("build/main.wasm"), {
@@ -147,7 +167,14 @@ self.onmessage = async (e) => {
 
   await initPromise;
 
-  const { heap_base, test, malloc, size_of_sv } = wasm.instance.exports;
+  const {
+    heap_base,
+    test,
+    malloc,
+    size_of_sv,
+    csv_get_numcol,
+    csv_get_numrow,
+  } = wasm.instance.exports;
 
   switch (type) {
     case "init":
@@ -169,16 +196,31 @@ self.onmessage = async (e) => {
         len,
       );
       wasmMemory.set(bytes);
-      console.log(
-        test(ptr, len),
-        get_string_view(test(ptr, len)),
-        size_of_sv(),
-      );
-      console.log(ptr, buffer, len, terminal);
+      let csvptr = test(ptr, len);
+      let head_ptr = get_headptr(csvptr);
       let term = terminal;
-      let head = [];
-      self.postMessage({ type: "stdout", term, head });
-      console.log(wasm.instance.exports.memory.buffer);
+      let numcols = csv_get_numcol(csvptr);
+      let numrows = csv_get_numrow(csvptr);
+      fill_head(head_ptr, numcols);
+      let typesptr = get_typesptr(csvptr);
+      console.log(typesptr);
+      for (let i = 0; i < numcols; i++) {
+        console.log(
+          new DataView(wasm.instance.exports.memory.buffer).getUint32(
+            typesptr + i * 4,
+            true,
+          ),
+        );
+      }
+      console.log("number of columns", numcols, numrows);
+      self.postMessage({ type: "stdout", term, head, body });
     }
+  }
+};
+
+const fill_head = (head_ptr, numcols) => {
+  for (let i = 0; i < numcols; i++) {
+    head.push(get_string_view(head_ptr + i * 8));
+    console.log(head);
   }
 };

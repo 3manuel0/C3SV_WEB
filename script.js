@@ -67,7 +67,7 @@ fileInput.onchange = async () => {
   // read file as ArrayBuffer
   const buffer = await file.arrayBuffer();
 
-  // send WITHOUT copying (transfer ownership)
+  // send without copying (transfer ownership)
   worker.postMessage({ type: "file", buffer }, [buffer]);
 };
 
@@ -80,6 +80,7 @@ worker.onmessage = (e) => {
       terminal.textContent += term;
       // scrolling
       terminal.scrollTop = terminal.scrollHeight;
+      renderTable(head, []);
 
       break;
 

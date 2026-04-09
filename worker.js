@@ -17,6 +17,7 @@ let is_ready = false;
 let terminal = "";
 let head = [];
 let body = [];
+let types = [];
 const make_environment = (env) => {
   return new Proxy(env, {
     get(target, prop, receiver) {
@@ -179,6 +180,7 @@ self.onmessage = async (e) => {
     test,
     malloc,
     size_of_sv,
+    csv_data,
     csv_get_numcol,
     csv_get_numrow,
   } = wasm.instance.exports;
@@ -212,17 +214,15 @@ self.onmessage = async (e) => {
       let typesptr = get_typesptr(csvptr);
       console.log(typesptr);
       for (let i = 0; i < numcols; i++) {
-        console.log(
-          get_types[
-            new Uint32Array(
-              wasm.instance.exports.memory.buffer,
-              typesptr + i * 4,
-              1,
-            )[0]
-          ],
-          typesptr,
+        types.push(
+          new Uint32Array(
+            wasm.instance.exports.memory.buffer,
+            typesptr + i * 4,
+            1,
+          )[0],
         );
       }
+      fill_body(csv_data(csvptr), numcols, numrows, csvptr);
       console.log("number of columns", numcols, numrows);
       self.postMessage({ type: "stdout", term, head, body });
     }
@@ -233,5 +233,39 @@ const fill_head = (head_ptr, numcols) => {
   for (let i = 0; i < numcols; i++) {
     head.push(get_string_view(head_ptr + i * 8));
     console.log(head);
+  }
+};
+
+const fill_body = (body_ptr, numcols, numrows, csv_ptr) => {
+  const buffer = wasm.instance.exports.memory.buffer;
+  for (let i = 0; i < numrows; i++) {
+    for (let j = 0; j < numcols; j++) {
+      // head.push(get_string_view(head_ptr + j * 8));
+      const { csv_data_ptr, csv_data } = wasm.instance.exports;
+      switch (types[j]) {
+        case csv_type.string_:
+          let sv_ptr = new Uint32Array(buffer, body_ptr, 1)[0];
+          // body[i][j] = get_string_view(sv_ptr + j * 4);
+          let last_ptr = new Uint32Array(buffer, sv_ptr)[0];
+          console.log(
+            "body_ptr",
+            body_ptr,
+            "sv_ptr",
+            sv_ptr,
+            // get_string_view(last_ptr + 4 * j, 1),
+            "sv_ptr from c",
+            csv_data_ptr(csv_ptr, i, j),
+            "last_ptr",
+            last_ptr,
+            "csv.data from C ",
+            csv_data(csv_ptr),
+          );
+        case csv_type.float64_:
+          console.log("float");
+        case csv_type.int64_:
+          console.log("int");
+      }
+    }
+    body_ptr += 4;
   }
 };

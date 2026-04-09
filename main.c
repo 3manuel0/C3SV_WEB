@@ -30,3 +30,10 @@ size_t csv_get_numcol(CSV *csv){
 size_t csv_get_numrow(CSV *csv){
     return (csv->numrows);
 }
+
+sv * csv_data_ptr(CSV *csv, size_t row, size_t col){
+    return &((sv**)csv->data)[row][col];
+}
+void **csv_data(CSV *csv){
+    return csv->data;
+}

@@ -193,9 +193,12 @@ self.onmessage = async (e) => {
     case "run_test":
       // test(0);
       let term = terminal;
+      terminal = "";
+      head = [];
       self.postMessage({ type: "stdout", term });
       break;
     case "file": {
+      terminal = "";
       const bytes = new Uint8Array(buffer);
       const len = bytes.length;
       const ptr = malloc(len);
@@ -210,62 +213,59 @@ self.onmessage = async (e) => {
       let term = terminal;
       let numcols = csv_get_numcol(csvptr);
       let numrows = csv_get_numrow(csvptr);
-      fill_head(head_ptr, numcols);
       let typesptr = get_typesptr(csvptr);
-      console.log(typesptr);
+      fill_head(head_ptr, numcols);
+      types.length = 0;
       for (let i = 0; i < numcols; i++) {
-        types.push(
-          new Uint32Array(
-            wasm.instance.exports.memory.buffer,
-            typesptr + i * 4,
-            1,
-          )[0],
-        );
+        types[i] = new Uint32Array(
+          wasm.instance.exports.memory.buffer,
+          typesptr + i * 4,
+          1,
+        )[0];
       }
-      fill_body(csv_data(csvptr), numcols, numrows, csvptr);
+      fill_body(csvptr, numcols, numrows);
       console.log("number of columns", numcols, numrows);
       self.postMessage({ type: "stdout", term, head, body });
+      break;
     }
   }
 };
 
 const fill_head = (head_ptr, numcols) => {
+  head.length = 0;
   for (let i = 0; i < numcols; i++) {
-    head.push(get_string_view(head_ptr + i * 8));
+    head[i] = get_string_view(head_ptr + i * 8);
     console.log(head);
   }
 };
 
-const fill_body = (body_ptr, numcols, numrows, csv_ptr) => {
+const fill_body = (csv_ptr, numcols, numrows) => {
+  body.length = 0;
   const buffer = wasm.instance.exports.memory.buffer;
+  const { csv_data_ptr } = wasm.instance.exports;
   for (let i = 0; i < numrows; i++) {
+    body[i] = [];
     for (let j = 0; j < numcols; j++) {
       // head.push(get_string_view(head_ptr + j * 8));
-      const { csv_data_ptr, csv_data } = wasm.instance.exports;
+      let data_ptr = csv_data_ptr(csv_ptr, i, j);
       switch (types[j]) {
         case csv_type.string_:
-          let sv_ptr = new Uint32Array(buffer, body_ptr, 1)[0];
-          // body[i][j] = get_string_view(sv_ptr + j * 4);
-          let last_ptr = new Uint32Array(buffer, sv_ptr)[0];
-          console.log(
-            "body_ptr",
-            body_ptr,
-            "sv_ptr",
-            sv_ptr,
-            // get_string_view(last_ptr + 4 * j, 1),
-            "sv_ptr from c",
-            csv_data_ptr(csv_ptr, i, j),
-            "last_ptr",
-            last_ptr,
-            "csv.data from C ",
-            csv_data(csv_ptr),
-          );
+          body[i][j] = get_string_view(data_ptr);
+          console.log(body[i][j]);
+          break;
         case csv_type.float64_:
-          console.log("float");
+          console.log("float", types[j]);
+          body[i][j] = new Float64Array(buffer, data_ptr, 1)[0];
+          console.log(body[i][j]);
+          break;
+
         case csv_type.int64_:
-          console.log("int");
+          console.log("int", types[j]);
+          body[i][j] = new BigInt64Array(buffer, data_ptr, 1)[0];
+          console.log(body[i][j], types[j]);
+          break;
       }
     }
-    body_ptr += 4;
   }
+  console.log(body[0][0]);
 };

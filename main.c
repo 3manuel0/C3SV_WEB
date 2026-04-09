@@ -13,13 +13,10 @@ CSV *test(void *ptr, size_t size){
     } 
     FILE *f = fopen(ptr, size);
     CSV *csv = load_csv(f);
+    csv_write_json(csv);
+    jsprintf("\n");
     csv_print_types(csv);
-    for(size_t i = 0; i < csv->numrows; i++)
-        csv_print_row(csv->data[i], csv->types, csv->numcols);
-    jsprintf("types* = %d\n", csv->types);
-    
-    f32 s = 10.5f;
-    jsprintf("\ncsv is at address:%d %d %g %d test\n", csv, CURRENT_PTR, s, 500);
+    jsprintf("csv is at address: %d CURRENT_PTR: %d\n", csv, CURRENT_PTR);
     return csv;
 }
 
@@ -31,8 +28,14 @@ size_t csv_get_numrow(CSV *csv){
     return (csv->numrows);
 }
 
-sv * csv_data_ptr(CSV *csv, size_t row, size_t col){
-    return &((sv**)csv->data)[row][col];
+void * csv_data_ptr(CSV *csv, size_t row, size_t col){
+    if(csv->types[col] == string_)
+        return &((sv**)csv->data)[row][col];
+    else if (csv->types[col] == int64_)
+        return &((i64**)csv->data)[row][col];
+    else if (csv->types[col] == float64_)
+        return &((f64**)csv->data)[row][col];
+    return NULL;
 }
 void **csv_data(CSV *csv){
     return csv->data;

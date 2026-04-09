@@ -32,7 +32,7 @@ void csv_write_file(void *address, size_t size, const CSV *csv); // write a csv 
 
 ssize_t csv_get_column_index(const CSV *csv, string_view name); // returns -1 if it doesn't find the column name
 
-i32 csv_write_json(void *addr, size_t size, const CSV *csv);// writes a json files from a csv in memory
+i32 csv_write_json(const CSV *csv);// writes a json files from a csv in memory
 
 i64 csv_get_int_by_name(const CSV *csv, size_t row, string_view col_name);
 

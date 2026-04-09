@@ -401,59 +401,59 @@ void csv_parse_with_types(CSV *csv){
 
 
 // TODO : FIX THE FORMATTING AND USE LESS CODE
-i32 csv_write_json(void *addr, size_t size, const CSV *csv){
+i32 csv_write_json(const CSV *csv){
     // assert(csv != NULL && filename != NULL);
-    FILE *f = fopen(addr, size);
-    fprintf(f, "[");
-    fwrite("\n", 1, 1, f);
+    // FILE *f = fopen(addr, size);
+    jsprintf("[");
+    fwrite("\n", 1, 1, stdout);
     for(size_t i = 0; i < csv->numrows; i++){
-        fwrite("\t{\n", 1, 3,f);
+        fwrite("\t{\n", 1, 3,stdout);
         for(size_t j = 0; j < csv->numcols; j++){
             switch ((int)csv->types[j]) {
                 case string_:
-                    fwrite("\t\t", 1, 2, f);
-                    sv_write_j(&csv->head[j], f);
-                    fwrite(": ", 1, 2,f);
+                    fwrite("\t\t", 1, 2, stdout);
+                    sv_write_j(&csv->head[j], stdout);
+                    fwrite(": ", 1, 2,stdout);
                     // fwrite(((sv **)csv->data)[i][j].str, 1, ((sv **)csv->data)[i][j].len,f);
-                    sv_write_j(&((sv **)csv->data)[i][j], f);
+                    sv_write_j(&((sv **)csv->data)[i][j], stdout);
                     break;
                 case float64_:
-                    fwrite("\t\t", 1, 2, f);
-                    sv_write_j(&csv->head[j], f);
-                    fprintf(f, ": %g", ((f64**)csv->data)[i][j]);
+                    fwrite("\t\t", 1, 2, stdout);
+                    sv_write_j(&csv->head[j], stdout);
+                    jsprintf(": %g", ((f64**)csv->data)[i][j]);
                     break;
                 case int64_:
-                    fwrite("\t\t", 1, 2, f);
-                    sv_write_j(&csv->head[j], f);
-                    fprintf(f, ": %ld", ((i64**)csv->data)[i][j]);
+                    fwrite("\t\t", 1, 2, stdout);
+                    sv_write_j(&csv->head[j], stdout);
+                    jsprintf(": %ld", ((i64**)csv->data)[i][j]);
                     break;
                 case boolean_:
-                    fprintf(f, "%s", ((int**)csv->data)[i][j] ? "True" : "False");
+                    jsprintf("%s", ((int**)csv->data)[i][j] ? "True" : "False");
                     break;
                 default:
-                    fwrite("Uknown type", 1, 12, f);
+                    fwrite("Uknown type", 1, 12, stdout);
                     break;
             }
             if(j < csv->numcols - 1)
-                fwrite(",\n", 1, 2, f);
+                fwrite(",\n", 1, 2, stdout);
         }
-        fwrite("\n\t}", 1, 3,f);
+        fwrite("\n\t}", 1, 3,stdout);
         if(i < csv->numrows - 1)
-            fwrite(",\n", 1, 2, f);
+            fwrite(",\n", 1, 2, stdout);
     }
-    fwrite("\n]", 1, 2, f);
+    fwrite("\n]", 1, 2, stdout);
     return 1;
 }
 
-// void sv_write_j(const string_view *sv, FILE *f){
-//     if(sv->str[0] == '"'){
-//         sv_fwrite(sv, f);
-//         return;
-//     }
-//     fwrite("\"", 1, 1,f);
-//     sv_fwrite(sv, f);
-//     fwrite("\"", 1, 1,f);
-// }
+void sv_write_j(const string_view *sv, FILE *f){
+    if(sv->str[0] == '"'){
+        sv_print(sv);
+        return;
+    }
+    fwrite("\"", 1, 1,f);
+    sv_print(sv);
+    fwrite("\"", 1, 1,f);
+}
 
 // TODO : TESTING
 i64 csv_get_int_by_name(const CSV *csv, size_t row, string_view col_name){
@@ -615,28 +615,28 @@ f64 csv_column_max(const CSV* csv, size_t col_index){
     return 0.0;
 }
 
-// f64 csv_sum_column(CSV *csv, string_view column_name){
-//     ssize_t index = csv_get_column_index(csv, column_name);
-//     if(index < 0){
-//         jsprintf( "column not found\n");
-//         return 0.0;
-//     }
-//     if(csv->types[index] == float64_){
-//         f64 temp = 0.0;
-//         f64 ** col = (f64**)csv->data;
-//         for(size_t i = 0; i < csv->numrows; i++){
-//             temp+= col[i][index];
-//         }
-//         return temp;
-//     }
-//     else if(csv->types[index] == int64_){
-//         i64 temp = 0;
-//         i64 ** col = (i64**)csv->data;
-//         for(size_t i = 0; i < csv->numrows; i++){
-//             temp+= col[i][index];
-//         }
-//         return temp;
-//     }
-//     jsprintf( "column can't be summed\n");
-//     return 0.0;
-// }
+f64 csv_sum_column(CSV *csv, string_view column_name){
+    ssize_t index = csv_get_column_index(csv, column_name);
+    if(index < 0){
+        jsprintf( "column not found\n");
+        return 0.0;
+    }
+    if(csv->types[index] == float64_){
+        f64 temp = 0.0;
+        f64 ** col = (f64**)csv->data;
+        for(size_t i = 0; i < csv->numrows; i++){
+            temp+= col[i][index];
+        }
+        return temp;
+    }
+    else if(csv->types[index] == int64_){
+        i64 temp = 0;
+        i64 ** col = (i64**)csv->data;
+        for(size_t i = 0; i < csv->numrows; i++){
+            temp+= col[i][index];
+        }
+        return temp;
+    }
+    jsprintf( "column can't be summed\n");
+    return 0.0;
+}

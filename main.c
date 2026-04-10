@@ -1,6 +1,6 @@
 #include "includes/csv.h"
 #include "includes/lib3man.h"
-#include <stddef.h>
+#include "includes/wasm_mem.h"
 
 size_t size_of_sv(void){
     return sizeof(sv);

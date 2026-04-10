@@ -40,7 +40,7 @@ CSV *load_csv(FILE *csv_f){
     size_t temp_file_size = ftell(csv_f);
     jsprintf("ftell = %d \n", temp_file_size);
     u8 * csv_mem = malloc(temp_file_size + KiB(1));
-
+    csv_mem[temp_file_size] = 0;
     if(csv_mem == NULL){
         fprintf(stderr, "Error, Memory Allocation Failed");
         return NULL;

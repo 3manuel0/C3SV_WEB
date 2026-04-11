@@ -16,8 +16,6 @@
 
     void sv_write_j(const sv *sv, FILE *f);
 
-    void *csv_get_cell(const CSV *csv, size_t row, size_t col);
-
     int csv_parse(CSV *csv, u8 *mem);
 // ****************************************************************************
  
@@ -489,22 +487,7 @@ string_view csv_get_sv_by_name(const CSV *csv, size_t row, string_view col_name)
     return *((sv *)csv_get_cell(csv, row, col_index));
 }
 
-void *csv_get_cell(const CSV *csv, size_t row, size_t col){
-    return &((void **)csv->data[row])[col];
-}
-
-
 // TODO: TEST THESE FUNCTIONS 
-size_t csv_row_count(const CSV *csv){
-    // assert(csv != NULL);
-    return csv->numrows;
-}
-
-size_t csv_column_count(const CSV *csv){
-    // assert(csv != NULL);
-    return csv->numcols;
-}
-
 string_view csv_column_name(const CSV *csv, size_t column){
     // assert(csv != NULL);
     if(column >= csv->numcols){
@@ -639,4 +622,55 @@ f64 csv_sum_column(CSV *csv, string_view column_name){
     }
     jsprintf( "column can't be summed\n");
     return 0.0;
+}
+
+// API function for wasm/js to get data in js from wasm without needing
+// to know where is everything in the memory we only need CSV* (pointer)
+size_t csv_column_count(const CSV *csv){
+      if(csv == NULL) return 0;
+    if(csv->head == NULL ||
+       csv->data == NULL ||
+       csv->types == NULL||
+       csv->gl_arena == NULL
+    ){
+        return 0;
+    }
+    return (csv->numcols);
+}
+
+size_t csv_row_count(const CSV *csv){
+    if(csv == NULL) return 0;
+    if(csv->head == NULL ||
+       csv->data == NULL ||
+       csv->types == NULL||
+       csv->gl_arena == NULL
+    ){
+        return 0;
+    }
+    return (csv->numrows);
+}
+
+
+void * csv_get_cell(const CSV *csv, size_t row, size_t col){
+        
+    if(csv == NULL) return NULL;
+
+    if(csv->head == NULL ||
+       csv->data == NULL ||
+       csv->types == NULL||
+       csv->gl_arena == NULL
+    ){
+        return NULL;
+    }
+    // returning pointers based on types 
+    if(csv->types[col] == string_){
+        return &((sv**)csv->data)[row][col];
+    }
+    else if (csv->types[col] == int64_){
+        return &((i64**)csv->data)[row][col];
+    }
+    else if (csv->types[col] == float64_){
+        return &((f64**)csv->data)[row][col];
+    }
+    return NULL;
 }

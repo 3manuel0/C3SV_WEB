@@ -175,15 +175,8 @@ self.onmessage = async (e) => {
 
   await initPromise;
 
-  const {
-    heap_base,
-    test,
-    malloc,
-    size_of_sv,
-    csv_data,
-    csv_get_numcol,
-    csv_get_numrow,
-  } = wasm.instance.exports;
+  const { heap_base, test, malloc, csv_column_count, csv_row_count } =
+    wasm.instance.exports;
 
   switch (type) {
     case "init":
@@ -211,8 +204,8 @@ self.onmessage = async (e) => {
       let csvptr = test(ptr, len);
       let head_ptr = get_headptr(csvptr);
       let term = terminal;
-      let numcols = csv_get_numcol(csvptr);
-      let numrows = csv_get_numrow(csvptr);
+      let numcols = csv_column_count(csvptr);
+      let numrows = csv_row_count(csvptr);
       let typesptr = get_typesptr(csvptr);
       fill_head(head_ptr, numcols);
       types.length = 0;
@@ -242,12 +235,12 @@ const fill_head = (head_ptr, numcols) => {
 const fill_body = (csv_ptr, numcols, numrows) => {
   body.length = 0;
   const buffer = wasm.instance.exports.memory.buffer;
-  const { csv_data_ptr } = wasm.instance.exports;
+  const { csv_get_cell } = wasm.instance.exports;
   for (let i = 0; i < numrows; i++) {
     body[i] = [];
     for (let j = 0; j < numcols; j++) {
       // head.push(get_string_view(head_ptr + j * 8));
-      let data_ptr = csv_data_ptr(csv_ptr, i, j);
+      let data_ptr = csv_get_cell(csv_ptr, i, j);
       switch (types[j]) {
         case csv_type.string_:
           body[i][j] = get_string_view(data_ptr);

@@ -175,7 +175,7 @@ self.onmessage = async (e) => {
 
   await initPromise;
 
-  const { heap_base, test, malloc, csv_column_count, csv_row_count } =
+  const { heap_base, test, malloc, csv_column_count, csv_row_count, free_all } =
     wasm.instance.exports;
 
   switch (type) {
@@ -218,6 +218,7 @@ self.onmessage = async (e) => {
       }
       fill_body(csvptr, numcols, numrows);
       console.log("number of columns", numcols, numrows);
+      console.log(free_all());
       self.postMessage({ type: "stdout", term, head, body });
       break;
     }

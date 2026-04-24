@@ -35,13 +35,61 @@ function renderTable(headers, data) {
   thead.appendChild(headerRow);
 
   // Rows
-  data.forEach((row) => {
+  // data.forEach((row) => {
+  //   const tr = document.createElement("tr");
+  //   row.forEach((cell) => {
+  //     const td = document.createElement("td");
+  //     td.textContent = cell;
+  //     tr.appendChild(td);
+  //   });
+  //   tbody.appendChild(tr);
+  // });
+  data.forEach((row, rowIndex) => {
     const tr = document.createElement("tr");
-    row.forEach((cell) => {
+
+    row.forEach((cell, colIndex) => {
       const td = document.createElement("td");
       td.textContent = cell;
+
+      td.addEventListener("click", () => {
+        // prevent multiple inputs
+        if (td.querySelector("input")) return;
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = td.textContent;
+
+        td.textContent = "";
+        td.appendChild(input);
+        input.focus();
+
+        // Save function
+        const save = () => {
+          const newValue = input.value;
+          td.removeChild(input);
+          td.textContent = newValue;
+
+          // update your data model
+          data[rowIndex][colIndex] = newValue;
+
+          // 🔥 HERE is your index
+          console.log("Edited cell:", {
+            row: rowIndex,
+            col: colIndex,
+            value: newValue,
+          });
+        };
+
+        // Save on blur or Enter
+        input.addEventListener("blur", save);
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") input.blur();
+        });
+      });
+
       tr.appendChild(td);
     });
+
     tbody.appendChild(tr);
   });
 }

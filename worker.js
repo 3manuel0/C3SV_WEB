@@ -175,8 +175,14 @@ self.onmessage = async (e) => {
 
   await initPromise;
 
-  const { heap_base, test, malloc, csv_column_count, csv_row_count, free_all } =
-    wasm.instance.exports;
+  const {
+    heap_base,
+    test,
+    malloc,
+    csv_column_count,
+    csv_row_count,
+    reset_heap,
+  } = wasm.instance.exports;
 
   switch (type) {
     case "init":
@@ -203,7 +209,6 @@ self.onmessage = async (e) => {
       wasmMemory.set(bytes);
       let csvptr = test(ptr, len);
       let head_ptr = get_headptr(csvptr);
-      let term = terminal;
       let numcols = csv_column_count(csvptr);
       let numrows = csv_row_count(csvptr);
       let typesptr = get_typesptr(csvptr);
@@ -218,7 +223,8 @@ self.onmessage = async (e) => {
       }
       fill_body(csvptr, numcols, numrows);
       console.log("number of columns", numcols, numrows);
-      console.log(free_all());
+      console.log(reset_heap());
+      let term = terminal;
       self.postMessage({ type: "stdout", term, head, body });
       break;
     }
